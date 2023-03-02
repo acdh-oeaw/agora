@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: selenium
+spec:
+  selector:
+      app: selenium
+  ports:
+    - protocol: TCP
+      port: 4444
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: selenium
+spec:
+  selector:
+    matchLabels:
+      app: selenium
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: selenium
+        ID: "99999"
+    spec:
+      containers:
+      - name: selenium
+        image: selenium/standalone-chrome
+        env:
+        - name: HUB_PORT_4444_TCP_ADDR
+          value: "hub"
+        - name: HUB_PORT_4444_TCP_PORT
+          value: "4444"
+        - name: START_XVFB
+          value: "true"
+        command: []
+        stdin: true
+        tty: true
+        ports:
+        - containerPort: 80
+      initContainers:
+      - name: init-agora-frontend
+        image: busybox
+        command: ['sh', '-c', 'until nslookup agora-frontend.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for agora-frontend; sleep 2; done;']
+      initContainers:
+      - name: init-agora-backend
+        image: busybox
+        command: ['sh', '-c', 'until nslookup agora-backend.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for agora-backend; sleep 2; done;']
+

@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    name: Build Agora backend and frontend
+    name: Build Agora 
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -37,6 +37,14 @@ jobs:
           push: true
           tags: |
             ghcr.io/acdh-oeaw/agora/agora-backend:latest
+        - name: Build and push Selenium python tests
+        uses: docker/build-push-action@v3
+        with:
+          context: selenium-python-tests/.
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/acdh-oeaw/agora/selenium-python-tests:latest
 
   deploy:
     name: Deploy Agora SP

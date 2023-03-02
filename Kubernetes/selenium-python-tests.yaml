@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: selenium-python-tests
+spec:
+  selector:
+      app: selenium-python-tests
+  ports:
+    - protocol: TCP
+      port: 8080
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: selenium-python-tests
+spec:
+  selector:
+    matchLabels:
+      app: selenium-python-tests
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: selenium-python-tests
+        ID: "99999"
+    spec:
+      containers:
+      - name: selenium-python-tests
+        image: ghcr.io/acdh-oeaw/agora/selenium-python-tests:latest
+        securityContext:
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+        env:
+        - name: HUB_PORT_4444_TCP_ADDR
+          value: "hub"
+        - name: HUB_PORT_4444_TCP_PORT
+          value: "4444"
+        - name: START_XVFB
+          value: "true"
+        command: ["pytest agora_unit_tests.py --maxfail=1 -o junit_family=xunit2 --junitxml=reports/junit.xml"]
+        stdin: true
+        tty: true
+        ports:
+        - containerPort: 8080
+      initContainers:
+      - name: init-agora-frontend
+        image: busybox
+        command: ['sh', '-c', 'until nslookup agora-frontend.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for agora-frontend; sleep 2; done;']
+      initContainers:
+      - name: init-agora-backend
+        image: busybox
+        command: ['sh', '-c', 'until nslookup agora-backend.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for agora-backend; sleep 2; done;']
+      initContainers:
+      - name: init-selenium
+        image: busybox
+        command: ['sh', '-c', 'until nslookup selenium.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for selenium; sleep 2; done;']
+
