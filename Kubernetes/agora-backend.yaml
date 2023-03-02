@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: agora-backend
+spec:
+  selector:
+      app: agora-backend
+  ports:
+    - protocol: TCP
+      port: 8020
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agora-backend
+spec:
+  selector:
+    matchLabels:
+      app: agora-backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: agora-backend
+        ID: "99999"
+    spec:
+      containers:
+      - name: agora-backend
+        image: ghcr.io/acdh-oeaw/agora/agora-backend
+        env:
+        - name: DB_NAME
+          value: "agora_sp"
+        - name: DB_USER
+          value: "agora_sp"
+        - name: DB_HOST
+          value: "helios.arz.oeaw.ac.at"
+        - name: DB_PORT
+          value: "5434"
+        livenessProbe:
+          path: "/ui/auth/login"
+          initialDelaySeconds: 20
+          timeoutSeconds: 90
+          scheme: "HTTP"
+          probeType: "httpGet"
+        readinessProbe:
+          path: "/ui/auth/login"
+          initialDelaySeconds: 20
+          timeoutSeconds: 90
+          scheme: "HTTP"
+          probeType: "httpGet"
+        command: []
+        stdin: true
+        tty: true
+        ports:
+        - containerPort: 8020
+        volumeMounts:
+        - name: dist
+          mountPath: /srv/agora/ui/dist
+      initContainers:
+      - name: init-agora-frontend
+        image: busybox
+        command: ['sh', '-c', 'until nslookup agora-frontend.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for agora-frontend; sleep 2; done;']
+      volumes:
+          - name: dist
+            persistentVolumeClaim:
+              claimName: dist
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: agora-backend
+spec:
+  rules:
+    - host: agora-sp.acdh-dev.oeaw.ac.at
+      http:
+        paths:
+          - backend:
+              service:
+                name: agora-backend
+                port:
+                  number: 8020
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - agora-sp.acdh-dev.oeaw.ac.at

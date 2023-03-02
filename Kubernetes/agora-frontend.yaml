@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: agora-frontend
+spec:
+  selector:
+      app: agora-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dist
+spec:
+  accessModes:
+    - ReadWriteOnce
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: "1000Mi"
+  volumeMode: Filesystem
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agora-frontend
+spec:
+  selector:
+    matchLabels:
+      app: agora-frontend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: agora-frontend
+        ID: "99999"
+    spec:
+      containers:
+      - name: agora-frontend
+        image: ghcr.io/acdh-oeaw/agora/agora-frontend:latest
+        command: ["/bin/sh"]
+        stdin: true
+        tty: true
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: dist
+          mountPath: /srv/agora/ui/dist
+      volumes:
+          - name: dist
+            persistentVolumeClaim:
+              claimName: dist
+
+
