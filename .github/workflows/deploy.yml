@@ -37,7 +37,7 @@ jobs:
           push: true
           tags: |
             ghcr.io/acdh-oeaw/agora/agora-backend:latest
-        - name: Build and push Selenium python tests
+      - name: Build and push Selenium python tests
         uses: docker/build-push-action@v3
         with:
           context: selenium-python-tests/.
