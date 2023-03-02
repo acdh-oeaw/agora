@@ -29,9 +29,6 @@ spec:
       containers:
       - name: selenium-python-tests
         image: ghcr.io/acdh-oeaw/agora/selenium-python-tests:latest
-        securityContext:
-          runAsUser: 1000
-          allowPrivilegeEscalation: false
         env:
         - name: HUB_PORT_4444_TCP_ADDR
           value: "hub"
@@ -39,7 +36,7 @@ spec:
           value: "4444"
         - name: START_XVFB
           value: "true"
-        command: ["pytest agora_unit_tests.py --maxfail=1 -o junit_family=xunit2 --junitxml=reports/junit.xml"]
+        command: ["/bin/sh"]
         stdin: true
         tty: true
         ports:
