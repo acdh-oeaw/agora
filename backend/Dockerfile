@@ -15,7 +15,7 @@ RUN git clone --branch master --single-branch https://github.com/grnet/agora-sp.
     cp /home/agora-sp/requirements.txt /srv/agora/requirements.txt && \
     cp /home/agora-sp/version /srv/agora/version && \
     cp -r /home/agora-sp/agora /srv/agora/agora   
-RUn cd /srv/agora && pip install -r requirements.txt --no-cache-dir 
+RUN cd /srv/agora && pip install -r requirements.txt --no-cache-dir 
 RUN pip install gunicorn --no-cache-dir && \
     pip install psycopg2-binary --no-cache-dir && \
     chown -R www-data:www-data /srv/agora/agora && \
